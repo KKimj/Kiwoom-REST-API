@@ -208,7 +208,7 @@ def print_summary(official: dict, spec: dict, new_apis: dict, removed_apis: dict
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--gate",
+        "--ci",
         action="store_true",
         help="PR/머지 게이트 모드: drift 있으면 exit 1, Issue 미생성",
     )
@@ -230,7 +230,7 @@ def main() -> None:
     print("⚠️  Drift 감지:")
     print_summary(official, spec, new_apis, removed_apis, changed_fields)
 
-    if args.gate:
+    if args.ci:
         sys.exit(1)
 
     token = os.environ.get("GH_TOKEN", "")
