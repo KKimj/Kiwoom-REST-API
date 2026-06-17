@@ -82,7 +82,10 @@ def build_properties(fields: list[dict]) -> dict:
         if desc_parts:
             schema["description"] = " / ".join(desc_parts)
         if f.get("lngt"):
-            schema["maxLength"] = int(f["lngt"])
+            try:
+                schema["maxLength"] = int(f["lngt"])
+            except (ValueError, TypeError):
+                pass
         props[item_id] = schema
     return props
 
@@ -93,7 +96,9 @@ def build_required(fields: list[dict]) -> list[str]:
 
 def api_to_path(entry: dict) -> tuple[str, str, dict]:
     info = entry.get("apiInfo", {})
-    api_id = entry.get("apiId", "")
+    api_id = entry.get("apiId", "").strip()
+    if not api_id:
+        raise ValueError("apiId가 비어 있습니다.")
     svc_uri = (info.get("svcUri") or "").rstrip("/")
     method = (info.get("jobMethod") or "POST").lower()
     api_name = (info.get("apiNm") or api_id)
@@ -136,9 +141,10 @@ def api_to_path(entry: dict) -> tuple[str, str, dict]:
     # extra header parameters not in common
     common_ids = {"authorization", "api-id", "cont-yn", "next-key"}
     for hf in req_header_fields:
-        if hf.get("itemId", "").lower() not in common_ids:
+        item_id = hf.get("itemId", "").strip()
+        if item_id and item_id.lower() not in common_ids:
             operation["parameters"].append({
-                "name": hf["itemId"],
+                "name": item_id,
                 "in": "header",
                 "required": hf.get("esntYn") == "Y",
                 "schema": field_to_schema(hf),
@@ -157,7 +163,7 @@ def api_to_path(entry: dict) -> tuple[str, str, dict]:
         }
 
     # tags from path segments
-    parts = [p for p in svc_uri.strip("/").split("/") if p not in ("api",)]
+    parts = [p for p in svc_uri.strip("/").split("/") if p and p not in ("api",)]
     operation["tags"] = [parts[-1]] if parts else ["기타"]
 
     return path, method, operation
