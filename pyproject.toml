@@ -1,0 +1,26 @@
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "F",    # pyflakes
+    "B",    # flake8-bugbear
+    "SIM",  # flake8-simplify
+    "I",    # isort
+    "N",    # pep8-naming
+    "UP",   # pyupgrade
+]
+ignore = [
+    "SIM105",  # contextlib.suppress — try-except-pass도 허용 (가독성)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/*.py" = [
+    "E501",  # 마크다운 템플릿 문자열은 줄 길이 예외
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

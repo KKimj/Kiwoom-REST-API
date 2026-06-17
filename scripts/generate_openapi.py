@@ -6,6 +6,7 @@ Usage:
     python scripts/generate_openapi.py [--output openapi.json]
 """
 import argparse
+import contextlib
 import json
 import sys
 from datetime import date
@@ -82,10 +83,8 @@ def build_properties(fields: list[dict]) -> dict:
         if desc_parts:
             schema["description"] = " / ".join(desc_parts)
         if f.get("lngt"):
-            try:
+            with contextlib.suppress(ValueError, TypeError):
                 schema["maxLength"] = int(f["lngt"])
-            except (ValueError, TypeError):
-                pass
         props[item_id] = schema
     return props
 
