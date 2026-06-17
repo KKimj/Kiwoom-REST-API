@@ -1,0 +1,15 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - 'dart-v*'
+      - 'npm-v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish
+        run: echo "TODO — packages/ 구현 후 활성화"

@@ -1,0 +1,17 @@
+name: Lint
+
+on:
+  push:
+    paths:
+      - 'openapi.json'
+  pull_request:
+    paths:
+      - 'openapi.json'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate openapi.json
+        run: npx --yes @redocly/cli lint openapi.json

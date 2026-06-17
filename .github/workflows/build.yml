@@ -1,0 +1,17 @@
+name: Build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'openapi.json'
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate packages
+        run: echo "TODO — build/dart/generate.dart 구현 후 활성화"
