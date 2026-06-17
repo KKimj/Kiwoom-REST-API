@@ -17,7 +17,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install requests
-      - run: python scripts/validate.py
+      - run: python scripts/check.py
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}

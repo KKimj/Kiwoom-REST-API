@@ -3,11 +3,12 @@
 openapi.json vs 키움 공식 포털 diff → GitHub Issue 자동 등록
 
 Usage:
-    python scripts/validate.py
+    python scripts/check.py
 Env:
     GH_TOKEN  — GitHub 토큰 (Actions: secrets.GITHUB_TOKEN)
     GH_REPO   — owner/repo (Actions: github.repository)
 """
+import argparse
 import json
 import os
 import subprocess
@@ -173,22 +174,11 @@ def create_issue(repo: str, token: str, title: str, body: str):
         sys.exit(1)
 
 
-def main():
-    today = str(date.today())
-    print("공식 포털 조회 중...", file=sys.stderr)
-    official = fetch_official()
-    print(f"  → {len(official)}개 API", file=sys.stderr)
-
-    print("openapi.json 로드 중...", file=sys.stderr)
-    spec = load_spec()
-    print(f"  → {len(spec)}개 API", file=sys.stderr)
-
+def diff_spec(official: dict, spec: dict) -> tuple[dict, dict, dict]:
     official_ids = set(official)
     spec_ids = set(spec)
-
     new_apis = {k: official[k] for k in official_ids - spec_ids}
     removed_apis = {k: spec[k] for k in spec_ids - official_ids}
-
     changed_fields: dict[str, list] = {}
     for api_id in official_ids & spec_ids:
         changes = []
@@ -202,12 +192,46 @@ def main():
             changes.append({"field": field, "change": "출력 필드 삭제됨"})
         if changes:
             changed_fields[api_id] = changes
+    return new_apis, removed_apis, changed_fields
+
+
+def print_summary(official: dict, spec: dict, new_apis: dict, removed_apis: dict, changed_fields: dict) -> None:
+    print(f"  공식 포털: {len(official)}개  /  openapi.json: {len(spec)}개")
+    if new_apis:
+        print(f"  ➕ 신규 {len(new_apis)}개: {', '.join(sorted(new_apis)[:5])}{'...' if len(new_apis) > 5 else ''}")
+    if removed_apis:
+        print(f"  ➖ 삭제 {len(removed_apis)}개: {', '.join(sorted(removed_apis)[:5])}{'...' if len(removed_apis) > 5 else ''}")
+    if changed_fields:
+        print(f"  🔄 필드변경 {len(changed_fields)}개: {', '.join(sorted(changed_fields)[:5])}{'...' if len(changed_fields) > 5 else ''}")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--gate",
+        action="store_true",
+        help="PR/머지 게이트 모드: drift 있으면 exit 1, Issue 미생성",
+    )
+    args = parser.parse_args()
+
+    today = str(date.today())
+
+    print("공식 포털 조회 중...", file=sys.stderr)
+    official = fetch_official()
+    print("openapi.json 로드 중...", file=sys.stderr)
+    spec = load_spec()
+
+    new_apis, removed_apis, changed_fields = diff_spec(official, spec)
 
     if not new_apis and not removed_apis and not changed_fields:
-        print("✅ No drift — openapi.json이 공식 포털과 일치합니다.")
-        return
+        print(f"✅ No drift — 공식 포털({len(official)}개) = openapi.json({len(spec)}개), 모든 필드 일치")
+        sys.exit(0)
 
-    print(f"⚠️  Drift 감지: 신규 {len(new_apis)}, 삭제 {len(removed_apis)}, 변경 {len(changed_fields)}")
+    print("⚠️  Drift 감지:")
+    print_summary(official, spec, new_apis, removed_apis, changed_fields)
+
+    if args.gate:
+        sys.exit(1)
 
     token = os.environ.get("GH_TOKEN", "")
     repo = os.environ.get("GH_REPO", "")
