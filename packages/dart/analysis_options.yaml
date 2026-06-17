@@ -1,0 +1,40 @@
+# Dart lint 설정
+# REF: KKimj https://gist.github.com/KKimj/0785694a8d96ee635ff1353221f18163
+# REF: RydMike https://gist.github.com/rydmike/fdb53ddd933c37d20e6f3188a936cd4c
+include: package:lints/recommended.yaml
+
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+  errors:
+    missing_required_param: error
+    missing_return: error
+    parameter_assignments: warning
+    todo: ignore
+
+linter:
+  rules:
+    # 생성 코드 / 라이브러리에서 불필요한 규칙 비활성화
+    always_put_required_named_parameters_first: false
+    always_use_package_imports: false
+    avoid_annotating_with_dynamic: false
+    avoid_types_on_closure_parameters: false
+    cascade_invocations: false
+    comment_references: false
+    library_private_types_in_public_api: false
+    omit_local_variable_types: false
+    prefer_double_quotes: false
+    prefer_expression_function_bodies: false
+    prefer_final_parameters: false
+    public_member_api_docs: false   # 자동생성 코드에서 제외
+    unnecessary_final: false
+    # 활성화 권장
+    prefer_single_quotes: true
+    always_declare_return_types: true
+    avoid_dynamic_calls: true
+    unawaited_futures: true

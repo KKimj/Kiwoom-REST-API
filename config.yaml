@@ -1,0 +1,18 @@
+spec:
+  source: https://openapi.kiwoom.com/guide/getApiInfoListAjax
+  output: openapi.json
+
+packages:
+  dart:
+    name: kiwoom
+    version: 0.1.0
+    publish_to: pub.dev
+    path: packages/dart
+    description: 키움증권 REST API Dart 클라이언트
+    homepage: https://github.com/KKimj/Kiwoom-REST-API
+
+  # typescript:
+  #   name: kiwoom-rest-api
+  #   version: 0.1.0
+  #   publish_to: npm
+  #   path: packages/typescript

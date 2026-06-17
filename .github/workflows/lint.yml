@@ -1,0 +1,44 @@
+name: Lint
+
+on:
+  push:
+    paths:
+      - 'openapi.json'
+      - 'scripts/**'
+      - 'packages/dart/**'
+      - 'build/dart/**'
+  pull_request:
+    paths:
+      - 'openapi.json'
+      - 'scripts/**'
+      - 'packages/dart/**'
+      - 'build/dart/**'
+
+jobs:
+  lint-openapi:
+    name: OpenAPI (Redocly)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npx --yes @redocly/cli lint openapi.json
+
+  lint-python:
+    name: Python (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/ruff-action@v3
+        with:
+          args: check scripts/
+
+  lint-dart:
+    name: Dart (dart analyze)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+      - run: dart pub get
+        working-directory: packages/dart
+      - run: dart analyze packages/dart
