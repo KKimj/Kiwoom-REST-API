@@ -12,8 +12,8 @@
         position: fixed; top: 0; right: 0; z-index: 9999;
         display: flex; font-family: sans-serif; font-size: 13px;
       }
-      #viewer-nav a, #viewer-nav button {
-        padding: 6px 14px; text-decoration: none; border: none; cursor: pointer;
+      #viewer-nav a {
+        padding: 6px 14px; text-decoration: none;
         background: #1a1a2e; color: #aaa; border-left: 1px solid #333;
       }
       #viewer-nav a.active { color: #fff; background: #2d2d4e; }
@@ -27,83 +27,62 @@
       <span class="sep"></span>
       <a href="../ko/" class="active">KO</a>
       <a href="../en/">EN</a>
-      <span class="sep"></span>
-      <button id="theme-btn"></button>
     </nav>
-
     <script id="api-reference" data-url="../openapi.json"></script>
-
     <script>
-      (function () {
-        var stored = localStorage.getItem("kiwoom-theme");
-        var dark = stored ? stored === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+      fetch("../openapi.json")
+        .then(function (r) { return r.json(); })
+        .then(function (spec) {
+          var pathCount = Object.keys(spec.paths).length;
+          spec.info.title = "키움 REST API";
+          spec.info.description = [
+            "[키움증권](https://www.kiwoom.com) REST API.",
+            "",
+            "[키움 공식 개발자 포털](https://openapi.kiwoom.com)에서 **매일 자동 생성**되며 총 **" + pathCount + "개 엔드포인트**를 포함합니다.",
+            "",
+            "> ⚠ 각 operation의 `x-real-path`가 실제 HTTP 경로입니다.",
+            "> 여기 표시된 path의 마지막 세그먼트는 `api-id` 헤더값(라우팅 식별자)이며 URL로 직접 사용하지 않습니다.",
+            "",
+            "---",
+            "",
+            "## 시작하기",
+            "",
+            "**1단계 — 키움증권 계좌 개설**",
+            "[kiwoom.com](https://www.kiwoom.com)에서 회원가입 후 본인인증을 완료합니다.",
+            "",
+            "**2단계 — API 사용 신청 및 약관 동의**",
+            "[키움 OpenAPI 포털](https://openapi.kiwoom.com) → 마이페이지 → API 신청 → 약관 동의.",
+            "",
+            "**3단계 — 허용 IP 등록**",
+            "포털 마이페이지 → IP 관리에서 API를 호출할 서버 IP를 등록합니다.",
+            "",
+            "**4단계 — 거래 환경 선택**",
+            "| 환경 | Base URL |",
+            "|---|---|",
+            "| 실거래 | `https://api.kiwoom.com` |",
+            "| 모의거래 | `https://mockapi.kiwoom.com` |",
+            "",
+            "**5단계 — 접근토큰 발급**",
+            "포털에서 발급받은 `app_key`·`secret_key`로 `POST /token/au10001`을 호출합니다.",
+            "```",
+            "Authorization: Bearer <token>",
+            "api-id: <operation id, 예: ka10001>",
+            "```",
+            "",
+            "**6단계 — API 호출**",
+            "모든 엔드포인트는 고정 경로에 `POST`로 호출하며, `api-id` 헤더가 operation을 결정합니다.",
+            "",
+            "---",
+            "출처: [KKimj/Kiwoom-REST-API](https://github.com/KKimj/Kiwoom-REST-API)",
+          ].join("\n");
 
-        var btn = document.getElementById("theme-btn");
-        btn.textContent = dark ? "☀" : "☾";
-        btn.onclick = function () {
-          var next = localStorage.getItem("kiwoom-theme") === "light" ? "dark" : "light";
-          localStorage.setItem("kiwoom-theme", next);
-          location.reload();
-        };
+          document.getElementById("api-reference").dataset.configuration =
+            JSON.stringify({ theme: "purple", spec: { content: spec } });
 
-        fetch("../openapi.json")
-          .then(function (r) { return r.json(); })
-          .then(function (spec) {
-            spec.info.title = "키움 REST API";
-            var pathCount = Object.keys(spec.paths).length;
-            spec.info.description = [
-              "[키움증권](https://www.kiwoom.com) REST API.",
-              "",
-              "[키움 공식 개발자 포털](https://openapi.kiwoom.com)에서 **매일 자동 생성**되며 총 **" + pathCount + "개 엔드포인트**를 포함합니다.",
-              "",
-              "> ⚠ 각 operation의 `x-real-path`가 실제 HTTP 경로입니다.",
-              "> 여기 표시된 path의 마지막 세그먼트는 `api-id` 헤더값(라우팅 식별자)이며 URL로 직접 사용하지 않습니다.",
-              "",
-              "---",
-              "",
-              "## 시작하기",
-              "",
-              "**1단계 — 키움증권 계좌 개설**",
-              "[kiwoom.com](https://www.kiwoom.com)에서 회원가입 후 본인인증을 완료합니다.",
-              "",
-              "**2단계 — API 사용 신청 및 약관 동의**",
-              "[키움 OpenAPI 포털](https://openapi.kiwoom.com) → 마이페이지 → API 신청 → 약관 동의.",
-              "",
-              "**3단계 — 허용 IP 등록**",
-              "포털 마이페이지 → IP 관리에서 API를 호출할 서버 IP를 등록합니다.",
-              "",
-              "**4단계 — 거래 환경 선택**",
-              "| 환경 | Base URL |",
-              "|---|---|",
-              "| 실거래 | `https://api.kiwoom.com` |",
-              "| 모의거래 | `https://mockapi.kiwoom.com` |",
-              "",
-              "**5단계 — 접근토큰 발급**",
-              "포털에서 발급받은 `app_key`·`secret_key`로 `POST /token/au10001`을 호출합니다.",
-              "```",
-              "Authorization: Bearer <token>",
-              "api-id: <operation id, 예: ka10001>",
-              "```",
-              "",
-              "**6단계 — API 호출**",
-              "모든 엔드포인트는 고정 경로에 `POST`로 호출하며, `api-id` 헤더가 operation을 결정합니다.",
-              "",
-              "---",
-              "출처: [KKimj/Kiwoom-REST-API](https://github.com/KKimj/Kiwoom-REST-API)",
-            ].join("\n");
-
-            var el = document.getElementById("api-reference");
-            el.dataset.configuration = JSON.stringify({
-              theme: "purple",
-              darkMode: dark,
-              spec: { content: spec },
-            });
-
-            var s = document.createElement("script");
-            s.src = "https://cdn.jsdelivr.net/npm/@scalar/api-reference";
-            document.body.appendChild(s);
-          });
-      })();
+          var s = document.createElement("script");
+          s.src = "https://cdn.jsdelivr.net/npm/@scalar/api-reference";
+          document.body.appendChild(s);
+        });
     </script>
   </body>
 </html>
