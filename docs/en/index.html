@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Kiwoom REST API</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Interactive API reference for Kiwoom Securities REST API — auto-generated from the official Kiwoom portal." />
+    <meta property="og:title" content="Kiwoom REST API" />
+    <meta property="og:description" content="OpenAPI 3.1.0 specification for Kiwoom Securities REST API (Korean stock brokerage)." />
+    <style>
+      #viewer-nav {
+        position: fixed; top: 0; right: 0; z-index: 9999;
+        display: flex; font-family: sans-serif; font-size: 13px;
+      }
+      #viewer-nav a, #viewer-nav button {
+        padding: 6px 14px; text-decoration: none; border: none; cursor: pointer;
+        background: #1a1a2e; color: #aaa; border-left: 1px solid #333;
+      }
+      #viewer-nav a.active { color: #fff; background: #2d2d4e; }
+      #viewer-nav .sep { padding: 6px 0; background: #1a1a2e; border-left: 1px solid #555; }
+    </style>
+  </head>
+  <body>
+    <nav id="viewer-nav">
+      <a href="./index.html" class="active">Scalar</a>
+      <a href="./swagger.html">Swagger UI</a>
+      <span class="sep"></span>
+      <a href="../ko/">KO</a>
+      <a href="../en/" class="active">EN</a>
+      <span class="sep"></span>
+      <button id="theme-btn"></button>
+    </nav>
+
+    <script id="api-reference" data-url="../openapi.json"></script>
+
+    <script>
+      (function () {
+        var stored = localStorage.getItem("kiwoom-theme");
+        var dark = stored ? stored === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+        var btn = document.getElementById("theme-btn");
+        btn.textContent = dark ? "☀" : "☾";
+        btn.onclick = function () {
+          var next = localStorage.getItem("kiwoom-theme") === "light" ? "dark" : "light";
+          localStorage.setItem("kiwoom-theme", next);
+          location.reload();
+        };
+
+        // Fetch spec, patch info to English, then init Scalar
+        fetch("../openapi.json")
+          .then(function (r) { return r.json(); })
+          .then(function (spec) {
+            spec.info.title = "Kiwoom REST API";
+            var pathCount = Object.keys(spec.paths).length;
+            spec.info.description = [
+              "REST API for [Kiwoom Securities](https://www.kiwoom.com), a South Korean retail brokerage.",
+              "",
+              "**Auto-generated daily** from the [official Kiwoom developer portal](https://openapi.kiwoom.com) — **" + pathCount + " endpoints** covering trading, market data, account management, and more.",
+              "",
+              "> ⚠ Field names and descriptions are in Korean as provided by Kiwoom.",
+              "> Use `x-real-path` on each operation for the actual HTTP path.",
+              "> The final path segment here is the `api-id` header value (routing identifier), not a URL path.",
+              "",
+              "---",
+              "",
+              "## Getting Started",
+              "",
+              "**Step 1 — Create a Kiwoom account**",
+              "Sign up at [kiwoom.com](https://www.kiwoom.com) and complete identity verification.",
+              "",
+              "**Step 2 — Apply for API access**",
+              "[Kiwoom OpenAPI portal](https://openapi.kiwoom.com) → My Page → API Application → agree to terms.",
+              "",
+              "**Step 3 — Register allowed IPs**",
+              "Only pre-registered IPs can call the API. Add your server IP under My Page → IP Management.",
+              "",
+              "**Step 4 — Choose your environment**",
+              "| Environment | Base URL |",
+              "|---|---|",
+              "| Live trading | `https://api.kiwoom.com` |",
+              "| Paper trading | `https://mockapi.kiwoom.com` |",
+              "",
+              "**Step 5 — Obtain a bearer token**",
+              "Call `POST /token/au10001` with your `app_key` and `secret_key` from the portal.",
+              "```",
+              "Authorization: Bearer <token>",
+              "api-id: <operation id, e.g. ka10001>",
+              "```",
+              "",
+              "**Step 6 — Call the API**",
+              "All endpoints use `POST` to a fixed base path. The `api-id` header selects the operation.",
+              "",
+              "---",
+              "Source: [KKimj/Kiwoom-REST-API](https://github.com/KKimj/Kiwoom-REST-API)",
+            ].join("\n");
+
+            (spec.tags || []).forEach(function (tag) {
+              if (tag["x-description-en"]) tag.description = tag["x-description-en"];
+            });
+
+            var el = document.getElementById("api-reference");
+            el.dataset.configuration = JSON.stringify({
+              theme: "purple",
+              darkMode: dark,
+              spec: { content: spec },
+            });
+
+            var s = document.createElement("script");
+            s.src = "https://cdn.jsdelivr.net/npm/@scalar/api-reference";
+            document.body.appendChild(s);
+          });
+      })();
+    </script>
+  </body>
+</html>

@@ -16,6 +16,9 @@ import requests
 
 AJAX_URL = "https://openapi.kiwoom.com/guide/getApiInfoListAjax"
 
+_LOCALES_PATH = Path(__file__).parent / "locales.json"
+LOCALES: dict[str, dict] = json.loads(_LOCALES_PATH.read_text(encoding="utf-8"))
+
 COMMON_HEADERS = [
     {
         "name": "authorization",
@@ -104,6 +107,9 @@ def api_to_path(entry: dict) -> tuple[str, str, dict]:
 
     path = f"{svc_uri}/{api_id}"
 
+    parts = [p for p in svc_uri.strip("/").split("/") if p and p not in ("api",)]
+    segment = parts[-1] if parts else ""
+
     fields = entry.get("apiTrIo", [])
 
     req_body_fields = [
@@ -161,11 +167,14 @@ def api_to_path(entry: dict) -> tuple[str, str, dict]:
             "content": {"application/json": {"schema": body_schema}},
         }
 
-    # tags: "{segment} / {grpCodeNm}" 병기
+    # tags: "{segment} / {jobTpNm}" 병기 (없으면 순차 fallback)
+    job_tp = str(info.get("jobTpNm") or "").strip()
     grp = str(info.get("grpCodeNm") or "").strip()
-    parts = [p for p in svc_uri.strip("/").split("/") if p and p not in ("api",)]
-    segment = parts[-1] if parts else ""
-    if segment and grp:
+    if segment and job_tp:
+        tag = f"{segment} / {job_tp}"
+    elif job_tp:
+        tag = job_tp
+    elif segment and grp:
         tag = f"{segment} / {grp}"
     elif grp:
         tag = grp
@@ -176,6 +185,54 @@ def api_to_path(entry: dict) -> tuple[str, str, dict]:
     operation["tags"] = [tag]
 
     return path, method, operation
+
+
+def assign_indices(paths: dict) -> None:
+    """태그 → apiId 순 정렬 후 각 operation에 x-index(전역) 부여."""
+    items = []
+    for path, methods in paths.items():
+        for method, op in methods.items():
+            tag = op.get("tags", ["기타"])[0]
+            api_id = op.get("x-api-id", "")
+            items.append((tag, api_id, path, method))
+    items.sort(key=lambda x: (x[0], x[1]))
+    for idx, (_, _, path, method) in enumerate(items, 1):
+        paths[path][method]["x-index"] = idx
+
+
+def _render_tag_desc(ops: list[dict], locale: dict) -> str:
+    rows = "\n".join(
+        f"| {o['index']} | `{o['id']}` | {o['summary']} |"
+        for o in ops
+    )
+    return (
+        f"{locale['count_tpl'].format(n=len(ops))}\n\n"
+        f"| # | API ID | {locale['col_desc']} |\n|---|---|---|\n{rows}"
+    )
+
+
+def build_tag_descriptions(paths: dict) -> list[dict]:
+    from collections import defaultdict
+    tag_ops: dict[str, list[dict]] = defaultdict(list)
+    for methods in paths.values():
+        for op in methods.values():
+            for tag in op.get("tags", []):
+                tag_ops[tag].append({
+                    "id": op.get("x-api-id", op.get("operationId", "")),
+                    "summary": op.get("summary", ""),
+                    "index": op.get("x-index", 0),
+                })
+
+    result = []
+    for tag, ops in sorted(tag_ops.items()):
+        sorted_ops = sorted(ops, key=lambda x: x["id"])
+        tag_obj: dict = {"name": tag}
+        for locale_key, locale in LOCALES.items():
+            desc = _render_tag_desc(sorted_ops, locale)
+            key = locale["tag_ext"] or "description"
+            tag_obj[key] = desc
+        result.append(tag_obj)
+    return result
 
 
 def build_spec(entries: list[dict]) -> dict:
@@ -190,7 +247,9 @@ def build_spec(entries: list[dict]) -> dict:
             paths[path] = {}
         paths[path][method] = operation
 
+    assign_indices(paths)
     components_params = {p["name"]: {**p} for p in COMMON_HEADERS}
+    tags = build_tag_descriptions(paths)
 
     return {
         "openapi": "3.1.0",
@@ -217,6 +276,7 @@ def build_spec(entries: list[dict]) -> dict:
             {"url": "https://api.kiwoom.com", "description": "실거래"},
             {"url": "https://mockapi.kiwoom.com", "description": "모의투자"},
         ],
+        "tags": tags,
         "paths": paths,
         "components": {
             "parameters": components_params,

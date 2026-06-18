@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Kiwoom REST API — Swagger UI</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Swagger UI for Kiwoom Securities REST API." />
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css" />
+    <style>
+      body { margin: 0; }
+      #viewer-nav {
+        position: fixed; top: 0; right: 0; z-index: 9999;
+        display: flex; font-family: sans-serif; font-size: 13px;
+      }
+      #viewer-nav a {
+        padding: 6px 14px; text-decoration: none;
+        background: #1a1a2e; color: #aaa; border-left: 1px solid #333;
+      }
+      #viewer-nav a.active { color: #fff; background: #2d2d4e; }
+      #viewer-nav .sep { padding: 6px 0; background: #1a1a2e; border-left: 1px solid #555; }
+      #swagger-ui { padding-top: 0; }
+    </style>
+  </head>
+  <body>
+    <nav id="viewer-nav">
+      <a href="./index.html">Scalar</a>
+      <a href="./swagger.html" class="active">Swagger UI</a>
+      <span class="sep"></span>
+      <a href="../ko/swagger.html">KO</a>
+      <a href="../en/swagger.html" class="active">EN</a>
+    </nav>
+    <div id="swagger-ui"></div>
+    <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
+    <script>
+      fetch("../openapi.json")
+        .then(function (r) { return r.json(); })
+        .then(function (spec) {
+          spec.info.title = "Kiwoom REST API";
+          (spec.tags || []).forEach(function (tag) {
+            if (tag["x-description-en"]) tag.description = tag["x-description-en"];
+          });
+          spec.info.description =
+            "REST API for Kiwoom Securities (South Korea). " +
+            "Field names and descriptions are in Korean as provided by Kiwoom. " +
+            "Authenticate via POST /oauth2/token/au10001, then pass Authorization: Bearer <token>. " +
+            "See x-real-path on each operation for the actual HTTP path.";
+
+          SwaggerUIBundle({
+            spec: spec,
+            dom_id: "#swagger-ui",
+            presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.SwaggerUIStandalonePreset],
+            layout: "BaseLayout",
+            deepLinking: true,
+          });
+        });
+    </script>
+  </body>
+</html>
