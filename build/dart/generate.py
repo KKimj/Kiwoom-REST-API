@@ -28,7 +28,15 @@ def sanitize(s: str) -> str:
 
 
 def dart_string(s: str) -> str:
-    return "'" + s.replace("\\", "\\\\").replace("'", "\\'") + "'"
+    return (
+        "'"
+        + s.replace("\\", "\\\\")
+           .replace("'", "\\'")
+           .replace("\n", "\\n")
+           .replace("\r", "\\r")
+           .replace("\t", "\\t")
+        + "'"
+    )
 
 
 def dart_map(obj: object, indent: int = 0) -> str:
