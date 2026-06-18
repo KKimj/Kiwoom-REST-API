@@ -8,6 +8,7 @@ Env:
     GH_TOKEN  — GitHub 토큰 (Actions: secrets.GITHUB_TOKEN)
     GH_REPO   — owner/repo (Actions: github.repository)
 """
+
 import argparse
 import json
 import os
@@ -38,15 +39,13 @@ def fetch_official() -> dict[str, dict]:
         fields = entry.get("apiTrIo", [])
         result[api_id] = {
             "name": info.get("apiNm", api_id),
-            "path": f"{info.get('svcUri','')}/{api_id}",
+            "path": f"{info.get('svcUri', '')}/{api_id}",
             "method": (info.get("jobMethod") or "POST").upper(),
             "input_fields": sorted(
-                f["itemId"] for f in fields
-                if f.get("inptOutputTp") == "I" and f.get("itemId")
+                f["itemId"] for f in fields if f.get("inptOutputTp") == "I" and f.get("itemId")
             ),
             "output_fields": sorted(
-                f["itemId"] for f in fields
-                if f.get("inptOutputTp") == "O" and f.get("itemId")
+                f["itemId"] for f in fields if f.get("inptOutputTp") == "O" and f.get("itemId")
             ),
         }
     return result
@@ -89,7 +88,12 @@ def load_spec() -> dict[str, dict]:
     return result
 
 
-def build_issue_body(new_apis, removed_apis, changed_fields, today: str) -> str:
+def build_issue_body(
+    new_apis: dict[str, dict[str, str]],
+    removed_apis: dict[str, dict[str, str]],
+    changed_fields: dict[str, list[dict[str, str]]],
+    today: str,
+) -> str:
     lines = [f"## 🔔 API Spec Drift — {today}\n"]
     lines.append("키움 공식 포털과 `openapi.json` 간 차이가 감지되었습니다.\n")
 
@@ -128,9 +132,21 @@ def build_issue_body(new_apis, removed_apis, changed_fields, today: str) -> str:
 
 def has_open_drift_issue(repo: str, token: str) -> bool:
     result = subprocess.run(
-        ["gh", "issue", "list", "-R", repo, "--state", "open",
-         "--search", "API Spec Drift", "--json", "title"],
-        capture_output=True, text=True,
+        [
+            "gh",
+            "issue",
+            "list",
+            "-R",
+            repo,
+            "--state",
+            "open",
+            "--search",
+            "API Spec Drift",
+            "--json",
+            "title",
+        ],
+        capture_output=True,
+        text=True,
         env={**os.environ, "GH_TOKEN": token},
     )
     if result.returncode != 0:
@@ -139,13 +155,23 @@ def has_open_drift_issue(repo: str, token: str) -> bool:
     return any("API Spec Drift" in i.get("title", "") for i in issues)
 
 
-def create_issue(repo: str, token: str, title: str, body: str):
+def create_issue(repo: str, token: str, title: str, body: str) -> None:
     result = subprocess.run(
-        ["gh", "issue", "create", "-R", repo,
-         "--title", title,
-         "--body", body,
-         "--label", "P1,api-drift"],
-        capture_output=True, text=True,
+        [
+            "gh",
+            "issue",
+            "create",
+            "-R",
+            repo,
+            "--title",
+            title,
+            "--body",
+            body,
+            "--label",
+            "P1,api-drift",
+        ],
+        capture_output=True,
+        text=True,
         env={**os.environ, "GH_TOKEN": token},
     )
     if result.returncode != 0:
@@ -155,17 +181,38 @@ def create_issue(repo: str, token: str, title: str, body: str):
             ("api-drift", "0075ca", "API spec drift detected"),
         ]:
             subprocess.run(
-                ["gh", "label", "create", label, "-R", repo,
-                 "--color", color, "--description", desc, "--force"],
+                [
+                    "gh",
+                    "label",
+                    "create",
+                    label,
+                    "-R",
+                    repo,
+                    "--color",
+                    color,
+                    "--description",
+                    desc,
+                    "--force",
+                ],
                 capture_output=True,
                 env={**os.environ, "GH_TOKEN": token},
             )
         result = subprocess.run(
-            ["gh", "issue", "create", "-R", repo,
-             "--title", title,
-             "--body", body,
-             "--label", "P1,api-drift"],
-            capture_output=True, text=True,
+            [
+                "gh",
+                "issue",
+                "create",
+                "-R",
+                repo,
+                "--title",
+                title,
+                "--body",
+                body,
+                "--label",
+                "P1,api-drift",
+            ],
+            capture_output=True,
+            text=True,
             env={**os.environ, "GH_TOKEN": token},
         )
     print(result.stdout.strip())
@@ -195,14 +242,22 @@ def diff_spec(official: dict, spec: dict) -> tuple[dict, dict, dict]:
     return new_apis, removed_apis, changed_fields
 
 
-def print_summary(official: dict, spec: dict, new_apis: dict, removed_apis: dict, changed_fields: dict) -> None:
+def print_summary(
+    official: dict, spec: dict, new_apis: dict, removed_apis: dict, changed_fields: dict
+) -> None:
     print(f"  공식 포털: {len(official)}개  /  openapi.json: {len(spec)}개")
     if new_apis:
-        print(f"  ➕ 신규 {len(new_apis)}개: {', '.join(sorted(new_apis)[:5])}{'...' if len(new_apis) > 5 else ''}")
+        print(
+            f"  ➕ 신규 {len(new_apis)}개: {', '.join(sorted(new_apis)[:5])}{'...' if len(new_apis) > 5 else ''}"
+        )
     if removed_apis:
-        print(f"  ➖ 삭제 {len(removed_apis)}개: {', '.join(sorted(removed_apis)[:5])}{'...' if len(removed_apis) > 5 else ''}")
+        print(
+            f"  ➖ 삭제 {len(removed_apis)}개: {', '.join(sorted(removed_apis)[:5])}{'...' if len(removed_apis) > 5 else ''}"
+        )
     if changed_fields:
-        print(f"  🔄 필드변경 {len(changed_fields)}개: {', '.join(sorted(changed_fields)[:5])}{'...' if len(changed_fields) > 5 else ''}")
+        print(
+            f"  🔄 필드변경 {len(changed_fields)}개: {', '.join(sorted(changed_fields)[:5])}{'...' if len(changed_fields) > 5 else ''}"
+        )
 
 
 def main() -> None:
@@ -224,7 +279,9 @@ def main() -> None:
     new_apis, removed_apis, changed_fields = diff_spec(official, spec)
 
     if not new_apis and not removed_apis and not changed_fields:
-        print(f"✅ No drift — 공식 포털({len(official)}개) = openapi.json({len(spec)}개), 모든 필드 일치")
+        print(
+            f"✅ No drift — 공식 포털({len(official)}개) = openapi.json({len(spec)}개), 모든 필드 일치"
+        )
         sys.exit(0)
 
     print("⚠️  Drift 감지:")

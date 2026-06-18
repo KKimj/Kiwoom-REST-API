@@ -10,7 +10,7 @@ interface TokenResponse {
 }
 
 let cachedToken: string | null = null;
-let expiresAt: number = 0;
+let expiresAt = 0;
 
 function parseExpiresDt(dt: string): number {
   // "20251231235959" → ms timestamp
@@ -24,8 +24,8 @@ function parseExpiresDt(dt: string): number {
 }
 
 export function getBaseUrl(): string {
-  const env = (process.env.KIWOOM_ENV || "mock").toLowerCase();
-  return BASE_URLS[env] ?? BASE_URLS.mock;
+  const env = (process.env.KIWOOM_ENV ?? "mock").toLowerCase();
+  return env === "live" ? BASE_URLS.live : BASE_URLS.mock;
 }
 
 export async function getToken(): Promise<string> {
@@ -42,16 +42,18 @@ export async function getToken(): Promise<string> {
   const appKey = process.env.KIWOOM_APP_KEY;
   const appSecret = process.env.KIWOOM_APP_SECRET;
   if (!appKey || !appSecret) {
-    throw new Error(
-      "KIWOOM_APP_KEY and KIWOOM_APP_SECRET environment variables are required"
-    );
+    throw new Error("KIWOOM_APP_KEY and KIWOOM_APP_SECRET environment variables are required");
   }
 
   const base = getBaseUrl();
   const res = await fetch(`${base}/oauth2/token/au10001`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ grant_type: "client_credentials", appkey: appKey, appsecretkey: appSecret }),
+    body: JSON.stringify({
+      grant_type: "client_credentials",
+      appkey: appKey,
+      appsecretkey: appSecret,
+    }),
   });
 
   if (!res.ok) {
