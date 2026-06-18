@@ -197,11 +197,12 @@ def build_tag_descriptions(paths: dict) -> list[dict]:
 
     result = []
     for tag, ops in sorted(tag_ops.items()):
+        sorted_ops = sorted(ops, key=lambda x: x["id"])
         rows = "\n".join(
-            f"| `{o['id']}` | {o['summary']} |"
-            for o in sorted(ops, key=lambda x: x["id"])
+            f"| {i} | `{o['id']}` | {o['summary']} |"
+            for i, o in enumerate(sorted_ops, 1)
         )
-        desc = f"| API ID | 설명 |\n|---|---|\n{rows}"
+        desc = f"**{len(sorted_ops)}개**\n\n| # | API ID | 설명 |\n|---|---|---|\n{rows}"
         result.append({"name": tag, "description": desc})
     return result
 
