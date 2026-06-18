@@ -37,7 +37,7 @@ Future<Map<String, dynamic>?> _handle(Map<String, dynamic> req) async {
         'id': id,
         'result': {
           'protocolVersion': '2024-11-05',
-          'capabilities': {'tools': {}},
+          'capabilities': {'tools': <String, dynamic>{}},
           'serverInfo': {'name': 'kiwoom-rest-api', 'version': '0.1.0'},
         },
       };
