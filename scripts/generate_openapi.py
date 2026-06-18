@@ -164,11 +164,15 @@ def api_to_path(entry: dict) -> tuple[str, str, dict]:
             "content": {"application/json": {"schema": body_schema}},
         }
 
-    # tags: jobTpNm 기준 세분화 (없으면 grpCodeNm → segment 순 fallback)
+    # tags: "{segment} / {jobTpNm}" 병기 (없으면 순차 fallback)
     job_tp = str(info.get("jobTpNm") or "").strip()
     grp = str(info.get("grpCodeNm") or "").strip()
-    if job_tp:
+    if segment and job_tp:
+        tag = f"{segment} / {job_tp}"
+    elif job_tp:
         tag = job_tp
+    elif segment and grp:
+        tag = f"{segment} / {grp}"
     elif grp:
         tag = grp
     elif segment:
