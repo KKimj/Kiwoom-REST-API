@@ -222,9 +222,16 @@ def build_spec(entries: list[dict]) -> dict:
     }
 
 
+def write_spec(spec: dict, path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(spec, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"  → {path} 저장 완료", file=sys.stderr)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", default="openapi.json")
+    parser.add_argument("--no-docs", action="store_true", help="docs/openapi.json 미생성")
     args = parser.parse_args()
 
     print("공식 포털에서 API 목록 조회 중...", file=sys.stderr)
@@ -232,13 +239,15 @@ def main():
     print(f"  → {len(entries)}개 API 수신", file=sys.stderr)
 
     spec = build_spec(entries)
-    path_count = len(spec["paths"])
-    print(f"  → {path_count}개 경로 생성", file=sys.stderr)
+    print(f"  → {len(spec['paths'])}개 경로 생성", file=sys.stderr)
 
     out = Path(args.output)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(spec, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"  → {out} 저장 완료", file=sys.stderr)
+    write_spec(spec, out)
+
+    if not args.no_docs:
+        docs_out = out.parent / "docs" / "openapi.json"
+        if docs_out != out:
+            write_spec(spec, docs_out)
 
 
 if __name__ == "__main__":
