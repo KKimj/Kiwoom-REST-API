@@ -27,7 +27,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "generate": "python3 ../../build/mcp/generate.py",
+    "generate": "python3 ../../build/typescript/generate.py",
     "prepare": "npm run build"
   },
   "dependencies": {
