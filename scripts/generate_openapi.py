@@ -184,6 +184,28 @@ def api_to_path(entry: dict) -> tuple[str, str, dict]:
     return path, method, operation
 
 
+def build_tag_descriptions(paths: dict) -> list[dict]:
+    from collections import defaultdict
+    tag_ops: dict[str, list[dict]] = defaultdict(list)
+    for methods in paths.values():
+        for op in methods.values():
+            for tag in op.get("tags", []):
+                tag_ops[tag].append({
+                    "id": op.get("x-api-id", op.get("operationId", "")),
+                    "summary": op.get("summary", ""),
+                })
+
+    result = []
+    for tag, ops in sorted(tag_ops.items()):
+        rows = "\n".join(
+            f"| `{o['id']}` | {o['summary']} |"
+            for o in sorted(ops, key=lambda x: x["id"])
+        )
+        desc = f"| API ID | 설명 |\n|---|---|\n{rows}"
+        result.append({"name": tag, "description": desc})
+    return result
+
+
 def build_spec(entries: list[dict]) -> dict:
     paths: dict = {}
     for entry in entries:
@@ -197,6 +219,7 @@ def build_spec(entries: list[dict]) -> dict:
         paths[path][method] = operation
 
     components_params = {p["name"]: {**p} for p in COMMON_HEADERS}
+    tags = build_tag_descriptions(paths)
 
     return {
         "openapi": "3.1.0",
@@ -223,6 +246,7 @@ def build_spec(entries: list[dict]) -> dict:
             {"url": "https://api.kiwoom.com", "description": "실거래"},
             {"url": "https://mockapi.kiwoom.com", "description": "모의투자"},
         ],
+        "tags": tags,
         "paths": paths,
         "components": {
             "parameters": components_params,
