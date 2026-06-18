@@ -196,14 +196,21 @@ def build_tag_descriptions(paths: dict) -> list[dict]:
                 })
 
     result = []
+    global_counter = 1
     for tag, ops in sorted(tag_ops.items()):
         sorted_ops = sorted(ops, key=lambda x: x["id"])
-        rows = "\n".join(
-            f"| {i} | `{o['id']}` | {o['summary']} |"
-            for i, o in enumerate(sorted_ops, 1)
+        count = len(sorted_ops)
+        start, end = global_counter, global_counter + count - 1
+        rows = []
+        for i, o in enumerate(sorted_ops, 1):
+            rows.append(f"| {i} | {global_counter + i - 1} | `{o['id']}` | {o['summary']} |")
+        desc = (
+            f"**{count}개** (전체 {start}–{end})\n\n"
+            f"| # | 전체 | API ID | 설명 |\n|---|---|---|---|\n"
+            + "\n".join(rows)
         )
-        desc = f"**{len(sorted_ops)}개**\n\n| # | API ID | 설명 |\n|---|---|---|\n{rows}"
         result.append({"name": tag, "description": desc})
+        global_counter += count
     return result
 
 

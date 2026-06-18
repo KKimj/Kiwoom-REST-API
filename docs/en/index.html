@@ -94,6 +94,12 @@
               "Source: [KKimj/Kiwoom-REST-API](https://github.com/KKimj/Kiwoom-REST-API)",
             ].join("\n");
 
+            (spec.tags || []).forEach(function (tag) {
+              tag.description = (tag.description || "")
+                .replace(/\*\*(\d+)개\*\* \(전체 (\d+)–(\d+)\)/, "**$1 endpoints** (total $2–$3)")
+                .replace("| # | 전체 | API ID | 설명 |", "| # | Total | API ID | Description |");
+            });
+
             var el = document.getElementById("api-reference");
             el.dataset.configuration = JSON.stringify({
               theme: "purple",

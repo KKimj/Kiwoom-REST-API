@@ -36,6 +36,11 @@
         .then(function (r) { return r.json(); })
         .then(function (spec) {
           spec.info.title = "Kiwoom REST API";
+          (spec.tags || []).forEach(function (tag) {
+            tag.description = (tag.description || "")
+              .replace(/\*\*(\d+)개\*\* \(전체 (\d+)–(\d+)\)/, "**$1 endpoints** (total $2–$3)")
+              .replace("| # | 전체 | API ID | 설명 |", "| # | Total | API ID | Description |");
+          });
           spec.info.description =
             "REST API for Kiwoom Securities (South Korea). " +
             "Field names and descriptions are in Korean as provided by Kiwoom. " +
