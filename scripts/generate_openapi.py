@@ -16,7 +16,7 @@ import requests
 
 AJAX_URL = "https://openapi.kiwoom.com/guide/getApiInfoListAjax"
 
-_LOCALES_PATH = Path(__file__).parent.parent / "locales.json"
+_LOCALES_PATH = Path(__file__).parent / "locales.json"
 LOCALES: dict[str, dict] = json.loads(_LOCALES_PATH.read_text(encoding="utf-8"))
 
 COMMON_HEADERS = [
