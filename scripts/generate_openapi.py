@@ -16,6 +16,25 @@ import requests
 
 AJAX_URL = "https://openapi.kiwoom.com/guide/getApiInfoListAjax"
 
+# ── i18n ─────────────────────────────────────────────────────────────────────
+# tag_ext=None  → OpenAPI 표준 "description" 필드 (기본 로케일)
+# tag_ext=str   → OpenAPI 확장 필드 (예: "x-description-en")
+# 새 언어 추가: 아래 딕셔너리에 항목 하나만 추가하면 됨
+LOCALES: dict[str, dict] = {
+    "ko": {
+        "tag_ext": None,
+        "count": lambda n: f"**{n}개**",
+        "col_desc": "설명",
+    },
+    "en": {
+        "tag_ext": "x-description-en",
+        "count": lambda n: f"**{n} endpoints**",
+        "col_desc": "Description",
+    },
+}
+DEFAULT_LOCALE = "ko"
+# ─────────────────────────────────────────────────────────────────────────────
+
 COMMON_HEADERS = [
     {
         "name": "authorization",
@@ -197,6 +216,17 @@ def assign_indices(paths: dict) -> None:
         paths[path][method]["x-index"] = idx
 
 
+def _render_tag_desc(ops: list[dict], locale: dict) -> str:
+    rows = "\n".join(
+        f"| {o['index']} | `{o['id']}` | {o['summary']} |"
+        for o in ops
+    )
+    return (
+        f"{locale['count'](len(ops))}\n\n"
+        f"| # | API ID | {locale['col_desc']} |\n|---|---|---|\n{rows}"
+    )
+
+
 def build_tag_descriptions(paths: dict) -> list[dict]:
     from collections import defaultdict
     tag_ops: dict[str, list[dict]] = defaultdict(list)
@@ -212,19 +242,12 @@ def build_tag_descriptions(paths: dict) -> list[dict]:
     result = []
     for tag, ops in sorted(tag_ops.items()):
         sorted_ops = sorted(ops, key=lambda x: x["id"])
-        count = len(sorted_ops)
-        indices = [o["index"] for o in sorted_ops]
-        start, end = min(indices), max(indices)
-
-        ko_rows = "\n".join(
-            f"| {o['index']} | `{o['id']}` | {o['summary']} |"
-            for o in sorted_ops
-        )
-        en_rows = ko_rows
-
-        ko_desc = f"**{count}개**\n\n| # | API ID | 설명 |\n|---|---|---|\n{ko_rows}"
-        en_desc = f"**{count} endpoints**\n\n| # | API ID | Description |\n|---|---|---|\n{en_rows}"
-        result.append({"name": tag, "description": ko_desc, "x-description-en": en_desc})
+        tag_obj: dict = {"name": tag}
+        for locale_key, locale in LOCALES.items():
+            desc = _render_tag_desc(sorted_ops, locale)
+            key = locale["tag_ext"] or "description"
+            tag_obj[key] = desc
+        result.append(tag_obj)
     return result
 
 
