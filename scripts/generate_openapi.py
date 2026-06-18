@@ -162,7 +162,7 @@ def api_to_path(entry: dict) -> tuple[str, str, dict]:
         }
 
     # tags: "{segment} / {grpCodeNm}" 병기
-    grp = (info.get("grpCodeNm") or "").strip()
+    grp = str(info.get("grpCodeNm") or "").strip()
     parts = [p for p in svc_uri.strip("/").split("/") if p and p not in ("api",)]
     segment = parts[-1] if parts else ""
     if segment and grp:
