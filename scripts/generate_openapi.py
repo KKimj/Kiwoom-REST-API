@@ -222,14 +222,8 @@ def build_tag_descriptions(paths: dict) -> list[dict]:
         )
         en_rows = ko_rows
 
-        ko_desc = (
-            f"**{count}개** (전체 {start}–{end})\n\n"
-            f"| # | API ID | 설명 |\n|---|---|---|\n{ko_rows}"
-        )
-        en_desc = (
-            f"**{count} endpoints** (total {start}–{end})\n\n"
-            f"| # | API ID | Description |\n|---|---|---|\n{en_rows}"
-        )
+        ko_desc = f"**{count}개**\n\n| # | API ID | 설명 |\n|---|---|---|\n{ko_rows}"
+        en_desc = f"**{count} endpoints**\n\n| # | API ID | Description |\n|---|---|---|\n{en_rows}"
         result.append({"name": tag, "description": ko_desc, "x-description-en": en_desc})
     return result
 
