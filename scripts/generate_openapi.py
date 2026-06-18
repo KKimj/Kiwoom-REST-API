@@ -217,18 +217,18 @@ def build_tag_descriptions(paths: dict) -> list[dict]:
         start, end = min(indices), max(indices)
 
         ko_rows = "\n".join(
-            f"| {o['index']} | {i} | `{o['id']}` | {o['summary']} |"
-            for i, o in enumerate(sorted_ops, 1)
+            f"| {o['index']} | `{o['id']}` | {o['summary']} |"
+            for o in sorted_ops
         )
-        en_rows = ko_rows  # 데이터는 동일, 헤더만 다름
+        en_rows = ko_rows
 
         ko_desc = (
             f"**{count}개** (전체 {start}–{end})\n\n"
-            f"| # | index | API ID | 설명 |\n|---|---|---|---|\n{ko_rows}"
+            f"| # | API ID | 설명 |\n|---|---|---|\n{ko_rows}"
         )
         en_desc = (
             f"**{count} endpoints** (total {start}–{end})\n\n"
-            f"| # | index | API ID | Description |\n|---|---|---|---|\n{en_rows}"
+            f"| # | API ID | Description |\n|---|---|---|\n{en_rows}"
         )
         result.append({"name": tag, "description": ko_desc, "x-description-en": en_desc})
     return result
