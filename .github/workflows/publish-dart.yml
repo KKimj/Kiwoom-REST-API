@@ -1,0 +1,34 @@
+name: Publish kiwoom_rest_api to pub.dev
+
+on:
+  push:
+    tags:
+      - "dart-v*"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Regenerate generated/ from openapi.json
+        run: python3 build/dart/generate.py
+
+      - name: Install dependencies
+        working-directory: packages/dart
+        run: dart pub get
+
+      - name: Publish
+        working-directory: packages/dart
+        run: dart pub publish --force
