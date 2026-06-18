@@ -165,7 +165,14 @@ def api_to_path(entry: dict) -> tuple[str, str, dict]:
     grp = str(info.get("grpCodeNm") or "").strip()
     parts = [p for p in svc_uri.strip("/").split("/") if p and p not in ("api",)]
     segment = parts[-1] if parts else ""
-    tag = " / ".join(filter(None, [segment, grp])) or "기타"
+    if segment and grp:
+        tag = f"{segment} / {grp}"
+    elif grp:
+        tag = grp
+    elif segment:
+        tag = segment
+    else:
+        tag = "기타"
     operation["tags"] = [tag]
 
     return path, method, operation
