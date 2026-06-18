@@ -104,6 +104,9 @@ def api_to_path(entry: dict) -> tuple[str, str, dict]:
 
     path = f"{svc_uri}/{api_id}"
 
+    parts = [p for p in svc_uri.strip("/").split("/") if p and p not in ("api",)]
+    segment = parts[-1] if parts else ""
+
     fields = entry.get("apiTrIo", [])
 
     req_body_fields = [
@@ -161,12 +164,11 @@ def api_to_path(entry: dict) -> tuple[str, str, dict]:
             "content": {"application/json": {"schema": body_schema}},
         }
 
-    # tags: "{segment} / {grpCodeNm}" 병기
+    # tags: jobTpNm 기준 세분화 (없으면 grpCodeNm → segment 순 fallback)
+    job_tp = str(info.get("jobTpNm") or "").strip()
     grp = str(info.get("grpCodeNm") or "").strip()
-    parts = [p for p in svc_uri.strip("/").split("/") if p and p not in ("api",)]
-    segment = parts[-1] if parts else ""
-    if segment and grp:
-        tag = f"{segment} / {grp}"
+    if job_tp:
+        tag = job_tp
     elif grp:
         tag = grp
     elif segment:
