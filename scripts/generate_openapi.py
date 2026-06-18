@@ -184,6 +184,19 @@ def api_to_path(entry: dict) -> tuple[str, str, dict]:
     return path, method, operation
 
 
+def assign_indices(paths: dict) -> None:
+    """태그 → apiId 순 정렬 후 각 operation에 x-index(전역) 부여."""
+    items = []
+    for path, methods in paths.items():
+        for method, op in methods.items():
+            tag = op.get("tags", ["기타"])[0]
+            api_id = op.get("x-api-id", "")
+            items.append((tag, api_id, path, method))
+    items.sort(key=lambda x: (x[0], x[1]))
+    for idx, (_, _, path, method) in enumerate(items, 1):
+        paths[path][method]["x-index"] = idx
+
+
 def build_tag_descriptions(paths: dict) -> list[dict]:
     from collections import defaultdict
     tag_ops: dict[str, list[dict]] = defaultdict(list)
@@ -193,24 +206,31 @@ def build_tag_descriptions(paths: dict) -> list[dict]:
                 tag_ops[tag].append({
                     "id": op.get("x-api-id", op.get("operationId", "")),
                     "summary": op.get("summary", ""),
+                    "index": op.get("x-index", 0),
                 })
 
     result = []
-    global_counter = 1
     for tag, ops in sorted(tag_ops.items()):
         sorted_ops = sorted(ops, key=lambda x: x["id"])
         count = len(sorted_ops)
-        start, end = global_counter, global_counter + count - 1
-        rows = []
-        for i, o in enumerate(sorted_ops, 1):
-            rows.append(f"| {i} | {global_counter + i - 1} | `{o['id']}` | {o['summary']} |")
-        desc = (
-            f"**{count}개** (전체 {start}–{end})\n\n"
-            f"| # | 전체 | API ID | 설명 |\n|---|---|---|---|\n"
-            + "\n".join(rows)
+        indices = [o["index"] for o in sorted_ops]
+        start, end = min(indices), max(indices)
+
+        ko_rows = "\n".join(
+            f"| {o['index']} | {i} | `{o['id']}` | {o['summary']} |"
+            for i, o in enumerate(sorted_ops, 1)
         )
-        result.append({"name": tag, "description": desc})
-        global_counter += count
+        en_rows = ko_rows  # 데이터는 동일, 헤더만 다름
+
+        ko_desc = (
+            f"**{count}개** (전체 {start}–{end})\n\n"
+            f"| 전체 | # | API ID | 설명 |\n|---|---|---|---|\n{ko_rows}"
+        )
+        en_desc = (
+            f"**{count} endpoints** (total {start}–{end})\n\n"
+            f"| Total | # | API ID | Description |\n|---|---|---|---|\n{en_rows}"
+        )
+        result.append({"name": tag, "description": ko_desc, "x-description-en": en_desc})
     return result
 
 
@@ -226,6 +246,7 @@ def build_spec(entries: list[dict]) -> dict:
             paths[path] = {}
         paths[path][method] = operation
 
+    assign_indices(paths)
     components_params = {p["name"]: {**p} for p in COMMON_HEADERS}
     tags = build_tag_descriptions(paths)
 
