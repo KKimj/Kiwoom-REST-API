@@ -1,0 +1,44 @@
+{
+  "name": "kiwoom-rest-api",
+  "version": "0.1.0",
+  "description": "MCP server for Kiwoom Securities REST API — plug your app_key/secret into MCP config and start trading",
+  "license": "MPL-2.0",
+  "homepage": "https://github.com/KKimj/Kiwoom-REST-API",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KKimj/Kiwoom-REST-API.git",
+    "directory": "packages/mcp"
+  },
+  "keywords": [
+    "kiwoom",
+    "mcp",
+    "rest-api",
+    "stock",
+    "korea",
+    "trading"
+  ],
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "kiwoom-rest-api": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "generate": "python3 ../../build/mcp/generate.py",
+    "prepare": "npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.21",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
