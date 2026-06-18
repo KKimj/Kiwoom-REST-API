@@ -1,7 +1,8 @@
-name: kiwoom
-description: 키움증권 REST API Dart 클라이언트 — openapi.json에서 자동 생성됩니다.
+name: kiwoom_rest_api
+description: Kiwoom Securities REST API client library + MCP server
 version: 0.1.0
 homepage: https://github.com/KKimj/Kiwoom-REST-API
+repository: https://github.com/KKimj/Kiwoom-REST-API/tree/main/packages/dart
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -12,3 +13,6 @@ dependencies:
 dev_dependencies:
   lints: ^3.0.0
   test: ^1.24.0
+
+executables:
+  kiwoom-rest-api: kiwoom_rest_api

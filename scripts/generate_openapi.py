@@ -227,7 +227,7 @@ def build_tag_descriptions(paths: dict) -> list[dict]:
     for tag, ops in sorted(tag_ops.items()):
         sorted_ops = sorted(ops, key=lambda x: x["id"])
         tag_obj: dict = {"name": tag}
-        for locale_key, locale in LOCALES.items():
+        for _, locale in LOCALES.items():
             desc = _render_tag_desc(sorted_ops, locale)
             key = locale["tag_ext"] or "description"
             tag_obj[key] = desc
