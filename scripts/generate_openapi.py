@@ -16,24 +16,8 @@ import requests
 
 AJAX_URL = "https://openapi.kiwoom.com/guide/getApiInfoListAjax"
 
-# ── i18n ─────────────────────────────────────────────────────────────────────
-# tag_ext=None  → OpenAPI 표준 "description" 필드 (기본 로케일)
-# tag_ext=str   → OpenAPI 확장 필드 (예: "x-description-en")
-# 새 언어 추가: 아래 딕셔너리에 항목 하나만 추가하면 됨
-LOCALES: dict[str, dict] = {
-    "ko": {
-        "tag_ext": None,
-        "count": lambda n: f"**{n}개**",
-        "col_desc": "설명",
-    },
-    "en": {
-        "tag_ext": "x-description-en",
-        "count": lambda n: f"**{n} endpoints**",
-        "col_desc": "Description",
-    },
-}
-DEFAULT_LOCALE = "ko"
-# ─────────────────────────────────────────────────────────────────────────────
+_LOCALES_PATH = Path(__file__).parent.parent / "locales.json"
+LOCALES: dict[str, dict] = json.loads(_LOCALES_PATH.read_text(encoding="utf-8"))
 
 COMMON_HEADERS = [
     {
@@ -222,7 +206,7 @@ def _render_tag_desc(ops: list[dict], locale: dict) -> str:
         for o in ops
     )
     return (
-        f"{locale['count'](len(ops))}\n\n"
+        f"{locale['count_tpl'].format(n=len(ops))}\n\n"
         f"| # | API ID | {locale['col_desc']} |\n|---|---|---|\n{rows}"
     )
 

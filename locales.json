@@ -1,0 +1,12 @@
+{
+  "ko": {
+    "tag_ext": null,
+    "count_tpl": "**{n}개**",
+    "col_desc": "설명"
+  },
+  "en": {
+    "tag_ext": "x-description-en",
+    "count_tpl": "**{n} endpoints**",
+    "col_desc": "Description"
+  }
+}
