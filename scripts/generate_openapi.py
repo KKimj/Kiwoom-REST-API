@@ -161,9 +161,19 @@ def api_to_path(entry: dict) -> tuple[str, str, dict]:
             "content": {"application/json": {"schema": body_schema}},
         }
 
-    # tags from path segments
+    # tags: "{segment} / {grpCodeNm}" 병기
+    grp = (info.get("grpCodeNm") or "").strip()
     parts = [p for p in svc_uri.strip("/").split("/") if p and p not in ("api",)]
-    operation["tags"] = [parts[-1]] if parts else ["기타"]
+    segment = parts[-1] if parts else ""
+    if segment and grp:
+        tag = f"{segment} / {grp}"
+    elif grp:
+        tag = grp
+    elif segment:
+        tag = segment
+    else:
+        tag = "기타"
+    operation["tags"] = [tag]
 
     return path, method, operation
 
