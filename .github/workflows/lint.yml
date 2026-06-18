@@ -68,4 +68,7 @@ jobs:
       - run: dart pub get
         working-directory: packages/dart
       - run: dart analyze packages/dart
-      - run: dart format --output=none --set-exit-if-changed packages/dart/lib packages/dart/bin
+      - run: |
+          find packages/dart/lib/src packages/dart/bin -name '*.dart' \
+            -not -path '*/generated/*' \
+            | xargs dart format --output=none --set-exit-if-changed
