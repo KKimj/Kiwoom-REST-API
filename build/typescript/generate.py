@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-openapi.json → packages/mcp/src/tools.ts 생성
+openapi.json → packages/typescript/src/tools.ts 생성
 
 Usage:
-    python build/mcp/generate.py
+    python build/typescript/generate.py
 """
 import json
 import re
@@ -12,7 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent.parent.parent
 SPEC_PATH = ROOT / "openapi.json"
-OUT_PATH = ROOT / "packages/mcp/src/tools.ts"
+OUT_PATH = ROOT / "packages/typescript/src/tools.ts"
 
 EXCLUDED_API_IDS = {"au10001", "au10002"}
 EXCLUDED_SEGMENTS = {"websocket"}

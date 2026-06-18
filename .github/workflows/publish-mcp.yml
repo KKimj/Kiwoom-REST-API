@@ -24,14 +24,14 @@ jobs:
           python-version: "3.12"
 
       - name: Regenerate tools.ts from openapi.json
-        run: python3 build/mcp/generate.py
+        run: python3 build/typescript/generate.py
 
       - name: Install & build
-        working-directory: packages/mcp
+        working-directory: packages/typescript
         run: npm ci && npm run build
 
       - name: Publish
-        working-directory: packages/mcp
+        working-directory: packages/typescript
         run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
