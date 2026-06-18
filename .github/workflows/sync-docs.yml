@@ -38,18 +38,18 @@ jobs:
           git add docs/openapi.json
           git commit -m "sync: docs/openapi.json ← openapi.json (${DATE})"
           git push origin "$BRANCH"
+          printf '%s\n' \
+            '## Auto-sync: docs/openapi.json' \
+            '' \
+            '`openapi.json` 변경이 감지되어 `docs/openapi.json`이 뒤처진 상태입니다.' \
+            '' \
+            '내용 확인 후 머지하면 GitHub Pages가 최신 스펙으로 갱신됩니다.' \
+            '' \
+            '> 이 PR은 [sync-docs workflow](.github/workflows/sync-docs.yml)에 의해 자동 생성되었습니다.' \
+            > /tmp/pr-body.md
           gh pr create --draft \
             --title "sync: docs/openapi.json 업데이트 (${DATE})" \
-            --body "$(cat <<'BODY'
-## Auto-sync: docs/openapi.json
-
-\`openapi.json\` 변경이 감지되어 \`docs/openapi.json\`이 뒤처진 상태입니다.
-
-내용 확인 후 머지하면 GitHub Pages가 최신 스펙으로 갱신됩니다.
-
-> 이 PR은 [sync-docs workflow](.github/workflows/sync-docs.yml)에 의해 자동 생성되었습니다.
-BODY
-)" \
+            --body-file /tmp/pr-body.md \
             --head "$BRANCH" \
             --base main
         env:
