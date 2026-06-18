@@ -5,6 +5,7 @@
 Usage:
     python scripts/generate_openapi.py [--output openapi.json]
 """
+
 import argparse
 import contextlib
 import json
@@ -103,7 +104,7 @@ def api_to_path(entry: dict) -> tuple[str, str, dict]:
         raise ValueError("apiId가 비어 있습니다.")
     svc_uri = (info.get("svcUri") or "").rstrip("/")
     method = (info.get("jobMethod") or "POST").lower()
-    api_name = (info.get("apiNm") or api_id)
+    api_name = info.get("apiNm") or api_id
 
     path = f"{svc_uri}/{api_id}"
 
@@ -113,12 +114,10 @@ def api_to_path(entry: dict) -> tuple[str, str, dict]:
     fields = entry.get("apiTrIo", [])
 
     req_body_fields = [
-        f for f in fields
-        if f.get("inptOutputTp") == "I" and f.get("headBodyTp") == "B"
+        f for f in fields if f.get("inptOutputTp") == "I" and f.get("headBodyTp") == "B"
     ]
     req_header_fields = [
-        f for f in fields
-        if f.get("inptOutputTp") == "I" and f.get("headBodyTp") == "H"
+        f for f in fields if f.get("inptOutputTp") == "I" and f.get("headBodyTp") == "H"
     ]
     res_fields = [f for f in fields if f.get("inptOutputTp") == "O"]
 
@@ -148,13 +147,15 @@ def api_to_path(entry: dict) -> tuple[str, str, dict]:
     for hf in req_header_fields:
         item_id = hf.get("itemId", "").strip()
         if item_id and item_id.lower() not in common_ids:
-            operation["parameters"].append({
-                "name": item_id,
-                "in": "header",
-                "required": hf.get("esntYn") == "Y",
-                "schema": field_to_schema(hf),
-                "description": hf.get("itemNm", ""),
-            })
+            operation["parameters"].append(
+                {
+                    "name": item_id,
+                    "in": "header",
+                    "required": hf.get("esntYn") == "Y",
+                    "schema": field_to_schema(hf),
+                    "description": hf.get("itemNm", ""),
+                }
+            )
 
     if req_body_fields:
         props = build_properties(req_body_fields)
@@ -201,10 +202,7 @@ def assign_indices(paths: dict) -> None:
 
 
 def _render_tag_desc(ops: list[dict], locale: dict) -> str:
-    rows = "\n".join(
-        f"| {o['index']} | `{o['id']}` | {o['summary']} |"
-        for o in ops
-    )
+    rows = "\n".join(f"| {o['index']} | `{o['id']}` | {o['summary']} |" for o in ops)
     return (
         f"{locale['count_tpl'].format(n=len(ops))}\n\n"
         f"| # | API ID | {locale['col_desc']} |\n|---|---|---|\n{rows}"
@@ -213,15 +211,18 @@ def _render_tag_desc(ops: list[dict], locale: dict) -> str:
 
 def build_tag_descriptions(paths: dict) -> list[dict]:
     from collections import defaultdict
+
     tag_ops: dict[str, list[dict]] = defaultdict(list)
     for methods in paths.values():
         for op in methods.values():
             for tag in op.get("tags", []):
-                tag_ops[tag].append({
-                    "id": op.get("x-api-id", op.get("operationId", "")),
-                    "summary": op.get("summary", ""),
-                    "index": op.get("x-index", 0),
-                })
+                tag_ops[tag].append(
+                    {
+                        "id": op.get("x-api-id", op.get("operationId", "")),
+                        "summary": op.get("summary", ""),
+                        "index": op.get("x-index", 0),
+                    }
+                )
 
     result = []
     for tag, ops in sorted(tag_ops.items()):
@@ -298,7 +299,7 @@ def write_spec(spec: dict, path: Path) -> None:
     print(f"  → {path} 저장 완료", file=sys.stderr)
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", default="openapi.json")
     parser.add_argument("--no-docs", action="store_true", help="docs/openapi.json 미생성")

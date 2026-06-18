@@ -5,14 +5,18 @@ on:
     paths:
       - 'openapi.json'
       - 'scripts/**'
+      - 'build/**'
+      - 'packages/typescript/**'
       - 'packages/dart/**'
-      - 'build/dart/**'
+      - 'pyproject.toml'
   pull_request:
     paths:
       - 'openapi.json'
       - 'scripts/**'
+      - 'build/**'
+      - 'packages/typescript/**'
       - 'packages/dart/**'
-      - 'build/dart/**'
+      - 'pyproject.toml'
 
 jobs:
   lint-openapi:
@@ -23,16 +27,38 @@ jobs:
       - run: npx --yes @redocly/cli lint openapi.json
 
   lint-python:
-    name: Python (ruff)
+    name: Python (ruff check + format)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/ruff-action@v3
         with:
-          args: check scripts/
+          args: check scripts/ build/
+      - uses: astral-sh/ruff-action@v3
+        with:
+          args: format --check scripts/ build/
+
+  lint-typescript:
+    name: TypeScript (ESLint + Prettier + tsc)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: packages/typescript/package-lock.json
+      - run: npm ci
+        working-directory: packages/typescript
+      - run: npm run lint
+        working-directory: packages/typescript
+      - run: npm run format:check
+        working-directory: packages/typescript
+      - run: npm run build
+        working-directory: packages/typescript
 
   lint-dart:
-    name: Dart (dart analyze)
+    name: Dart (analyze + format)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -42,3 +68,7 @@ jobs:
       - run: dart pub get
         working-directory: packages/dart
       - run: dart analyze packages/dart
+      - run: |
+          find packages/dart/lib/src packages/dart/bin -name '*.dart' \
+            -not -path '*/generated/*' \
+            | xargs dart format --output=none --set-exit-if-changed

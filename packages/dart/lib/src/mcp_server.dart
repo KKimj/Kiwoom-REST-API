@@ -4,9 +4,7 @@ import 'dart:io';
 import 'generated/tools.dart';
 
 Future<void> runMcpServer() async {
-  final input = stdin
-      .transform(utf8.decoder)
-      .transform(const LineSplitter());
+  final input = stdin.transform(utf8.decoder).transform(const LineSplitter());
 
   await for (final line in input) {
     final trimmed = line.trim();
@@ -51,11 +49,13 @@ Future<Map<String, dynamic>?> _handle(Map<String, dynamic> req) async {
         'id': id,
         'result': {
           'tools': kTools
-              .map((t) => {
-                    'name': t.name,
-                    'description': t.description,
-                    'inputSchema': t.inputSchema,
-                  })
+              .map(
+                (t) => {
+                  'name': t.name,
+                  'description': t.description,
+                  'inputSchema': t.inputSchema,
+                },
+              )
               .toList(),
         },
       };
@@ -72,7 +72,7 @@ Future<Map<String, dynamic>?> _handle(Map<String, dynamic> req) async {
           'id': id,
           'result': {
             'content': [
-              {'type': 'text', 'text': 'Unknown tool: $toolName'}
+              {'type': 'text', 'text': 'Unknown tool: $toolName'},
             ],
             'isError': true,
           },
@@ -86,7 +86,7 @@ Future<Map<String, dynamic>?> _handle(Map<String, dynamic> req) async {
           'id': id,
           'result': {
             'content': [
-              {'type': 'text', 'text': jsonEncode(data)}
+              {'type': 'text', 'text': jsonEncode(data)},
             ],
           },
         };
@@ -96,7 +96,7 @@ Future<Map<String, dynamic>?> _handle(Map<String, dynamic> req) async {
           'id': id,
           'result': {
             'content': [
-              {'type': 'text', 'text': 'Error: $e'}
+              {'type': 'text', 'text': 'Error: $e'},
             ],
             'isError': true,
           },

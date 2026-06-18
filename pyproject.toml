@@ -11,16 +11,32 @@ select = [
     "I",    # isort
     "N",    # pep8-naming
     "UP",   # pyupgrade
+    "ANN",  # type annotation enforcement
+    "RUF",  # Ruff-specific rules
 ]
 ignore = [
-    "SIM105",  # contextlib.suppress — try-except-pass도 허용 (가독성)
+    "SIM105",   # contextlib.suppress — try-except-pass도 허용 (가독성)
+    "ANN401",   # Any 허용 — 외부 API 응답 처리용
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "scripts/*.py" = [
-    "E501",  # 마크다운 템플릿 문자열은 줄 길이 예외
+    "E501",   # 마크다운 템플릿 문자열은 줄 길이 예외
+    "RUF001", # ➕/➖ 이모지 의도적 사용 (GitHub Issue 본문 마크다운)
+]
+"build/**/*.py" = [
+    "ANN",    # 생성 스크립트는 type annotation 불필요
 ]
 
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
+
+[tool.mypy]
+python_version = "3.12"
+strict = false
+disallow_untyped_defs = true
+check_untyped_defs = true
+warn_return_any = true
+warn_unused_ignores = true
+ignore_missing_imports = true

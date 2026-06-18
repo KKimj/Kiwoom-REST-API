@@ -1,8 +1,6 @@
 import { getToken, getBaseUrl } from "./auth.js";
 
-export interface KiwoomResponse {
-  [key: string]: unknown;
-}
+export type KiwoomResponse = Record<string, unknown>;
 
 export async function callKiwoom(
   realPath: string,
@@ -25,9 +23,7 @@ export async function callKiwoom(
   const data = (await res.json()) as KiwoomResponse;
 
   if (!res.ok) {
-    throw new Error(
-      `Kiwoom API error (${res.status}): ${JSON.stringify(data)}`
-    );
+    throw new Error(`Kiwoom API error (${res.status}): ${JSON.stringify(data)}`);
   }
 
   return data;

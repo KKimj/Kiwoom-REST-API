@@ -4,10 +4,7 @@ import { API_PATHS, API_SEGMENTS } from "./generated/api_paths.js";
 export class SegmentClient {
   constructor(private readonly _segment: string) {}
 
-  call(
-    apiId: string,
-    args: Record<string, unknown> = {}
-  ): Promise<KiwoomResponse> {
+  call(apiId: string, args: Record<string, unknown> = {}): Promise<KiwoomResponse> {
     const realPath = API_PATHS[apiId];
     if (!realPath) throw new Error(`Unknown api_id: ${apiId}`);
     if (API_SEGMENTS[apiId] !== this._segment) {
