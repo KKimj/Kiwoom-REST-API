@@ -11,12 +11,39 @@
         position: fixed; top: 0; right: 0; z-index: 9999;
         display: flex; font-family: sans-serif; font-size: 13px;
       }
-      #viewer-nav a {
-        padding: 6px 14px; text-decoration: none;
+      #viewer-nav a, #viewer-nav button {
+        padding: 6px 14px; text-decoration: none; border: none; cursor: pointer;
         background: #1a1a2e; color: #aaa; border-left: 1px solid #333;
       }
       #viewer-nav a.active { color: #fff; background: #2d2d4e; }
       #viewer-nav .sep { padding: 6px 0; background: #1a1a2e; border-left: 1px solid #555; }
+
+      /* Dark mode overrides for Swagger UI */
+      html[data-theme="dark"] body { background: #0d1117; }
+      html[data-theme="dark"] .swagger-ui .info .title,
+      html[data-theme="dark"] .swagger-ui .info p,
+      html[data-theme="dark"] .swagger-ui .info li,
+      html[data-theme="dark"] .swagger-ui label,
+      html[data-theme="dark"] .swagger-ui .opblock-summary-description,
+      html[data-theme="dark"] .swagger-ui .response-col_description,
+      html[data-theme="dark"] .swagger-ui table thead tr td,
+      html[data-theme="dark"] .swagger-ui table thead tr th,
+      html[data-theme="dark"] .swagger-ui .parameter__name,
+      html[data-theme="dark"] .swagger-ui .parameter__type,
+      html[data-theme="dark"] .swagger-ui .tab li { color: #c9d1d9; }
+      html[data-theme="dark"] .swagger-ui .scheme-container,
+      html[data-theme="dark"] .swagger-ui .wrapper { background: #0d1117; }
+      html[data-theme="dark"] .swagger-ui .opblock { background: #161b22; border-color: #30363d; }
+      html[data-theme="dark"] .swagger-ui .opblock .opblock-summary { border-color: #30363d; }
+      html[data-theme="dark"] .swagger-ui .opblock-body { background: #0d1117; }
+      html[data-theme="dark"] .swagger-ui section.models { background: #161b22; border-color: #30363d; }
+      html[data-theme="dark"] .swagger-ui section.models .model-container { background: #0d1117; }
+      html[data-theme="dark"] .swagger-ui input[type="text"],
+      html[data-theme="dark"] .swagger-ui textarea,
+      html[data-theme="dark"] .swagger-ui select {
+        background: #161b22; color: #c9d1d9; border-color: #30363d;
+      }
+      html[data-theme="dark"] .swagger-ui .topbar { background: #161b22; }
     </style>
   </head>
   <body>
@@ -26,10 +53,26 @@
       <span class="sep"></span>
       <a href="../ko/swagger.html">KO</a>
       <a href="../en/swagger.html" class="active">EN</a>
+      <span class="sep"></span>
+      <button id="theme-btn"></button>
     </nav>
     <div id="swagger-ui"></div>
     <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
     <script>
+      (function () {
+        var stored = localStorage.getItem("kiwoom-theme");
+        var dark = stored ? stored === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+        if (dark) document.documentElement.dataset.theme = "dark";
+        var btn = document.getElementById("theme-btn");
+        btn.textContent = dark ? "☀" : "☾";
+        btn.onclick = function () {
+          var next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+          localStorage.setItem("kiwoom-theme", next);
+          document.documentElement.dataset.theme = next;
+          btn.textContent = next === "dark" ? "☀" : "☾";
+        };
+      })();
+
       SwaggerUIBundle({
         url: "../openapi.json",
         dom_id: "#swagger-ui",

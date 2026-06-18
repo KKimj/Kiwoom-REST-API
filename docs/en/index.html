@@ -9,8 +9,8 @@
         position: fixed; top: 0; right: 0; z-index: 9999;
         display: flex; font-family: sans-serif; font-size: 13px;
       }
-      #viewer-nav a {
-        padding: 6px 14px; text-decoration: none;
+      #viewer-nav a, #viewer-nav button {
+        padding: 6px 14px; text-decoration: none; border: none; cursor: pointer;
         background: #1a1a2e; color: #aaa; border-left: 1px solid #333;
       }
       #viewer-nav a.active { color: #fff; background: #2d2d4e; }
@@ -24,12 +24,21 @@
       <span class="sep"></span>
       <a href="../ko/">KO</a>
       <a href="../en/" class="active">EN</a>
+      <span class="sep"></span>
+      <button id="theme-btn" onclick="
+        var next = localStorage.getItem('kiwoom-theme') === 'light' ? 'dark' : 'light';
+        localStorage.setItem('kiwoom-theme', next);
+        location.reload();
+      "></button>
     </nav>
-    <script
-      id="api-reference"
-      data-url="../openapi.json"
-      data-configuration='{"theme":"purple"}'
-    ></script>
+    <script id="api-reference" data-url="../openapi.json"></script>
+    <script>
+      var stored = localStorage.getItem("kiwoom-theme");
+      var dark = stored ? stored === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.getElementById("api-reference").dataset.configuration =
+        JSON.stringify({ theme: "purple", darkMode: dark });
+      document.getElementById("theme-btn").textContent = dark ? "☀" : "☾";
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
   </body>
 </html>
