@@ -9,8 +9,8 @@ jobs:
   check:
     runs-on: ubuntu-latest
     permissions:
-      issues: write
-      contents: read
+      contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
