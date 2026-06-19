@@ -42,12 +42,12 @@ Future<String> getToken() async {
   }
 
   final res = await http.post(
-    Uri.parse('${getBaseUrl()}/oauth2/token/au10001'),
-    headers: {'Content-Type': 'application/json'},
+    Uri.parse('${getBaseUrl()}/oauth2/token'),
+    headers: {'Content-Type': 'application/json', 'api-id': 'au10001'},
     body: jsonEncode({
       'grant_type': 'client_credentials',
       'appkey': appKey,
-      'appsecretkey': appSecret,
+      'secretkey': appSecret,
     }),
   );
 
@@ -56,7 +56,11 @@ Future<String> getToken() async {
   }
 
   final data = jsonDecode(res.body) as Map<String, dynamic>;
-  _cachedToken = data['access_token'] as String;
+  final returnCode = data['return_code'] as int;
+  if (returnCode != 0) {
+    throw StateError('Token fetch failed: ${data['return_msg']}');
+  }
+  _cachedToken = data['token'] as String;
   _expiresAt = _parseExpiresDt(data['expires_dt'] as String);
   return _cachedToken!;
 }

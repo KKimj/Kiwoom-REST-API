@@ -5,8 +5,10 @@ const BASE_URLS: Record<string, string> = {
 
 interface TokenResponse {
   token_type: string;
-  access_token: string;
+  token: string;
   expires_dt: string; // "YYYYMMDDHHMMSS"
+  return_code: number;
+  return_msg: string;
 }
 
 let cachedToken: string | null = null;
@@ -46,13 +48,13 @@ export async function getToken(): Promise<string> {
   }
 
   const base = getBaseUrl();
-  const res = await fetch(`${base}/oauth2/token/au10001`, {
+  const res = await fetch(`${base}/oauth2/token`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "api-id": "au10001" },
     body: JSON.stringify({
       grant_type: "client_credentials",
       appkey: appKey,
-      appsecretkey: appSecret,
+      secretkey: appSecret,
     }),
   });
 
@@ -62,7 +64,10 @@ export async function getToken(): Promise<string> {
   }
 
   const data = (await res.json()) as TokenResponse;
-  cachedToken = data.access_token;
+  if (data.return_code !== 0) {
+    throw new Error(`Token fetch failed: ${data.return_msg}`);
+  }
+  cachedToken = data.token;
   expiresAt = parseExpiresDt(data.expires_dt);
   return cachedToken;
 }
