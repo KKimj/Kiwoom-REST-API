@@ -2302,24 +2302,6 @@ const List<ToolDefinition> kTools = [
     handler: _hkiwoom_frgnistt_ka10008,
   ),
   ToolDefinition(
-    name: 'kiwoom_frgnistt_ka10009',
-    description: '주식기관요청 (ka10009) — frgnistt / 기관/외국인',
-    inputSchema: {
-      'type': 'object',
-      'properties': {
-        'stk_cd': {
-          'type': 'string',
-          'description': '종목코드 / 거래소별 종목코드<br/>(KRX:039490,NXT:039490_NX,SOR:039490_AL) / 예: 005930',
-          'maxLength': 20,
-        },
-      },
-      'required': [
-        'stk_cd',
-      ],
-    },
-    handler: _hkiwoom_frgnistt_ka10009,
-  ),
-  ToolDefinition(
     name: 'kiwoom_frgnistt_ka10131',
     description: '기관외국인연속매매현황요청 (ka10131) — frgnistt / 기관/외국인',
     inputSchema: {
@@ -6138,9 +6120,6 @@ Future<Map<String, dynamic>> _hkiwoom_etf_ka40010(Map<String, dynamic> args) =>
 
 Future<Map<String, dynamic>> _hkiwoom_frgnistt_ka10008(Map<String, dynamic> args) =>
     callKiwoom('/api/dostk/frgnistt', 'ka10008', args);
-
-Future<Map<String, dynamic>> _hkiwoom_frgnistt_ka10009(Map<String, dynamic> args) =>
-    callKiwoom('/api/dostk/frgnistt', 'ka10009', args);
 
 Future<Map<String, dynamic>> _hkiwoom_frgnistt_ka10131(Map<String, dynamic> args) =>
     callKiwoom('/api/dostk/frgnistt', 'ka10131', args);
