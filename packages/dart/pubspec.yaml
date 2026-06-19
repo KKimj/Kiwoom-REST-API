@@ -1,6 +1,6 @@
 name: kiwoom_rest_api
 description: Kiwoom Securities REST API client library + MCP server
-version: 0.1.0
+version: 0.1.1
 homepage: https://github.com/KKimj/Kiwoom-REST-API
 repository: https://github.com/KKimj/Kiwoom-REST-API/tree/main/packages/dart
 

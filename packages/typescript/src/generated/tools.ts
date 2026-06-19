@@ -3005,33 +3005,6 @@ export const TOOLS: ToolDefinition[] = [
     },
   },
   {
-    name: "kiwoom_frgnistt_ka10009",
-    description: "\uc8fc\uc2dd\uae30\uad00\uc694\uccad (ka10009) \u2014 frgnistt / \uae30\uad00/\uc678\uad6d\uc778",
-    inputSchema: {
-        "type": "object",
-        "properties": {
-          "stk_cd": {
-            "type": "string",
-            "description": "종목코드 / 거래소별 종목코드<br/>(KRX:039490,NXT:039490_NX,SOR:039490_AL) / 예: 005930",
-            "maxLength": 20
-          }
-        },
-        "required": [
-          "stk_cd"
-        ]
-      },
-    async handler(args) {
-      const data = await callKiwoom(
-        "/api/dostk/frgnistt",
-        "ka10009",
-        args as Record<string, unknown>
-      );
-      return {
-        content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
-      };
-    },
-  },
-  {
     name: "kiwoom_frgnistt_ka10131",
     description: "\uae30\uad00\uc678\uad6d\uc778\uc5f0\uc18d\ub9e4\ub9e4\ud604\ud669\uc694\uccad (ka10131) \u2014 frgnistt / \uae30\uad00/\uc678\uad6d\uc778",
     inputSchema: {
