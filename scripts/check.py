@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-openapi.json vs 키움 공식 포털 diff → 드리프트 감지 시 자동 PR 생성
+openapi.json vs 키움 공식 포털 diff → drift 감지 시 GitHub Issue 등록
 
 Usage:
     python scripts/check.py
@@ -12,7 +12,6 @@ Env:
 import argparse
 import json
 import os
-import re
 import subprocess
 import sys
 from datetime import date
@@ -21,8 +20,7 @@ from pathlib import Path
 import requests
 
 AJAX_URL = "https://openapi.kiwoom.com/guide/getApiInfoListAjax"
-REPO_ROOT = Path(__file__).parent.parent
-OPENAPI_PATH = REPO_ROOT / "openapi.json"
+OPENAPI_PATH = Path(__file__).parent.parent / "openapi.json"
 
 
 def fetch_official() -> dict[str, dict]:
@@ -129,209 +127,91 @@ def print_summary(
         )
 
 
-# ── 자동화 헬퍼 ────────────────────────────────────────────────────────────────
-
-def bump_patch(version: str) -> str:
-    parts = version.split(".")
-    parts[-1] = str(int(parts[-1]) + 1)
-    return ".".join(parts)
-
-
-def get_current_ts_version() -> str:
-    pkg = json.loads((REPO_ROOT / "packages/typescript/package.json").read_text())
-    return pkg["version"]
-
-
-def get_current_dart_version() -> str:
-    text = (REPO_ROOT / "packages/dart/pubspec.yaml").read_text()
-    m = re.search(r"^version:\s*(.+)$", text, re.MULTILINE)
-    return m.group(1).strip() if m else "0.0.0"
-
-
-def bump_ts_version(new_ver: str) -> None:
-    path = REPO_ROOT / "packages/typescript/package.json"
-    pkg = json.loads(path.read_text())
-    pkg["version"] = new_ver
-    path.write_text(json.dumps(pkg, indent=2, ensure_ascii=False) + "\n")
-
-
-def bump_dart_version(new_ver: str) -> None:
-    path = REPO_ROOT / "packages/dart/pubspec.yaml"
-    text = path.read_text()
-    text = re.sub(r"^version: .+$", f"version: {new_ver}", text, flags=re.MULTILINE)
-    path.write_text(text)
-
-
-def prepend_changelog(path: Path, version: str, date_str: str, body: str) -> None:
-    existing = path.read_text() if path.exists() else "# Changelog\n"
-    entry = f"\n## [{version}] - {date_str}\n{body}\n"
-    if "# Changelog\n" in existing:
-        new = existing.replace("# Changelog\n", f"# Changelog\n{entry}", 1)
-    else:
-        new = f"# Changelog\n{entry}\n{existing}"
-    path.write_text(new)
-
-
-def run_cmd(cmd: list[str]) -> None:
-    subprocess.run(cmd, check=True, cwd=REPO_ROOT)
-
-
-def build_changelog_body(new_apis: dict, removed_apis: dict, changed_fields: dict) -> str:
-    lines = []
-    if removed_apis:
-        lines.append("### fix")
-        for api_id, info in sorted(removed_apis.items()):
-            lines.append(f"- remove deprecated API `{api_id}` ({info['name']})")
-    if new_apis:
-        lines.append("### feat")
-        for api_id, info in sorted(new_apis.items()):
-            lines.append(f"- add new API `{api_id}` ({info['name']})")
-    if changed_fields:
-        if not removed_apis:
-            lines.append("### fix")
-        for api_id, changes in sorted(changed_fields.items()):
-            lines.append(f"- update fields for `{api_id}` ({len(changes)} changes)")
-    return "\n".join(lines)
-
-
-def build_pr_body(
-    new_apis: dict, removed_apis: dict, changed_fields: dict,
-    today: str, cur_ts: str, new_ts: str, cur_dart: str, new_dart: str,
+def build_issue_body(
+    new_apis: dict, removed_apis: dict, changed_fields: dict, today: str
 ) -> str:
-    lines = [
-        f"## Auto-generated API spec update — {today}",
-        "",
-        "키움 공식 포털과 `openapi.json` 간 차이가 감지되어 자동 갱신합니다.",
-        "",
-        f"- TypeScript: `{cur_ts}` → `{new_ts}`",
-        f"- Dart: `{cur_dart}` → `{new_dart}`",
-        "",
-    ]
-    if removed_apis:
-        lines.append("### ➖ 삭제된 API")
-        lines.append("| API ID | 설명 |")
-        lines.append("|---|---|")
-        for api_id, info in sorted(removed_apis.items()):
-            lines.append(f"| `{api_id}` | {info['name']} |")
-        lines.append("")
+    lines = [f"## 🔔 API Spec Drift — {today}\n"]
+    lines.append("키움 공식 포털과 `openapi.json` 간 차이가 감지되었습니다.\n")
+
+    lines.append("### ➕ 신규 API (공식 추가, spec 미반영)")
     if new_apis:
-        lines.append("### ➕ 신규 API")
         lines.append("| API ID | 경로 | 설명 |")
         lines.append("|---|---|---|")
         for api_id, info in sorted(new_apis.items()):
             lines.append(f"| `{api_id}` | `{info['method']} {info['path']}` | {info['name']} |")
-        lines.append("")
+    else:
+        lines.append("없음")
+
+    lines.append("\n### ➖ 삭제된 API (공식 제거, spec 잔존)")
+    if removed_apis:
+        lines.append("| API ID | 경로 | 설명 |")
+        lines.append("|---|---|---|")
+        for api_id, info in sorted(removed_apis.items()):
+            lines.append(f"| `{api_id}` | `{info['method']} {info['path']}` | {info['name']} |")
+    else:
+        lines.append("없음")
+
+    lines.append("\n### 🔄 필드 변경")
     if changed_fields:
-        lines.append("### 🔄 필드 변경")
         lines.append("| API ID | 필드 | 변경 |")
         lines.append("|---|---|---|")
         for api_id, changes in sorted(changed_fields.items()):
             for change in changes:
                 lines.append(f"| `{api_id}` | `{change['field']}` | {change['change']} |")
-        lines.append("")
-    lines.append("---")
-    lines.append("*이 PR은 `scripts/check.py`가 자동 생성했습니다.*")
+    else:
+        lines.append("없음")
+
+    lines.append("\n---")
+    lines.append("`openapi.json` 업데이트: `python scripts/generate_openapi.py` 실행 후 PR.")
     return "\n".join(lines)
 
 
-def create_auto_pr(
-    new_apis: dict, removed_apis: dict, changed_fields: dict,
-    today: str, token: str, repo: str,
-) -> None:
-    branch = f"fix/auto-drift-{today}"
-    env = {**os.environ, "GH_TOKEN": token}
-
-    # git 설정
-    subprocess.run(["git", "config", "user.email", "github-actions[bot]@users.noreply.github.com"],
-                   check=True, cwd=REPO_ROOT)
-    subprocess.run(["git", "config", "user.name", "github-actions[bot]"],
-                   check=True, cwd=REPO_ROOT)
-
-    # 원격 URL에 토큰 삽입 (Actions 환경 push 권한)
-    remote_url = subprocess.check_output(
-        ["git", "remote", "get-url", "origin"], cwd=REPO_ROOT, text=True
-    ).strip()
-    if remote_url.startswith("https://") and "@" not in remote_url:
-        authed = remote_url.replace("https://", f"https://x-access-token:{token}@")
-        subprocess.run(["git", "remote", "set-url", "origin", authed],
-                       check=True, cwd=REPO_ROOT)
-
-    # 브랜치
-    subprocess.run(["git", "checkout", "-b", branch], check=True, cwd=REPO_ROOT)
-
-    # 1. openapi.json 재생성
-    print("generate_openapi.py 실행 중...", file=sys.stderr)
-    run_cmd(["python3", "scripts/generate_openapi.py"])
-
-    # 2. 패키지 재생성
-    print("TypeScript 패키지 재생성 중...", file=sys.stderr)
-    run_cmd(["python3", "build/typescript/generate.py"])
-    print("Dart 패키지 재생성 중...", file=sys.stderr)
-    run_cmd(["python3", "build/dart/generate.py"])
-
-    # 3. 버전 bump
-    cur_ts = get_current_ts_version()
-    new_ts = bump_patch(cur_ts)
-    cur_dart = get_current_dart_version()
-    new_dart = bump_patch(cur_dart)
-    bump_ts_version(new_ts)
-    bump_dart_version(new_dart)
-
-    # 4. CHANGELOG prepend
-    changelog_body = build_changelog_body(new_apis, removed_apis, changed_fields)
-    for cl_path in [
-        REPO_ROOT / "CHANGELOG.md",
-        REPO_ROOT / "packages/typescript/CHANGELOG.md",
-        REPO_ROOT / "packages/dart/CHANGELOG.md",
-    ]:
-        prepend_changelog(cl_path, new_ts, today, changelog_body)
-
-    # 5. 커밋 & 푸시
-    subprocess.run(["git", "add", "-A"], check=True, cwd=REPO_ROOT)
-    commit_msg = (
-        f"fix: auto-update API spec {today}\n\n"
-        f"Drift detected — regenerated openapi.json, TS/Dart packages.\n"
-        f"TypeScript: {cur_ts} → {new_ts} / Dart: {cur_dart} → {new_dart}"
-    )
-    subprocess.run(["git", "commit", "-m", commit_msg], check=True, cwd=REPO_ROOT)
-    subprocess.run(["git", "push", "-u", "origin", branch], check=True, cwd=REPO_ROOT, env=env)
-
-    # 6. PR 생성
-    pr_body = build_pr_body(new_apis, removed_apis, changed_fields,
-                            today, cur_ts, new_ts, cur_dart, new_dart)
+def has_open_drift_issue(repo: str, token: str) -> bool:
     result = subprocess.run(
-        [
-            "gh", "pr", "create",
-            "-R", repo,
-            "--title", f"fix: auto-update API spec ({today})",
-            "--body", pr_body,
-            "--head", branch,
-        ],
-        capture_output=True,
-        text=True,
-        env=env,
+        ["gh", "issue", "list", "-R", repo, "--state", "open",
+         "--search", "API Spec Drift", "--json", "title"],
+        capture_output=True, text=True,
+        env={**os.environ, "GH_TOKEN": token},
     )
+    if result.returncode != 0:
+        return False
+    issues = json.loads(result.stdout or "[]")
+    return any("API Spec Drift" in i.get("title", "") for i in issues)
+
+
+def create_issue(repo: str, token: str, title: str, body: str) -> None:
+    env = {**os.environ, "GH_TOKEN": token}
+    result = subprocess.run(
+        ["gh", "issue", "create", "-R", repo,
+         "--title", title, "--body", body, "--label", "P1,api-drift"],
+        capture_output=True, text=True, env=env,
+    )
+    if result.returncode != 0:
+        for label, color, desc in [
+            ("P1", "d93f0b", "Priority 1"),
+            ("api-drift", "0075ca", "API spec drift detected"),
+        ]:
+            subprocess.run(
+                ["gh", "label", "create", label, "-R", repo,
+                 "--color", color, "--description", desc, "--force"],
+                capture_output=True, env=env,
+            )
+        result = subprocess.run(
+            ["gh", "issue", "create", "-R", repo,
+             "--title", title, "--body", body, "--label", "P1,api-drift"],
+            capture_output=True, text=True, env=env,
+        )
+    print(result.stdout.strip())
     if result.returncode != 0:
         print(result.stderr.strip(), file=sys.stderr)
         sys.exit(1)
-    pr_url = result.stdout.strip()
-    print(pr_url)
-    pr_number = pr_url.rstrip("/").split("/")[-1]
-    subprocess.run(
-        ["gh", "pr", "merge", pr_number, "-R", repo, "--auto", "--squash"],
-        env=env,
-        cwd=REPO_ROOT,
-    )
 
-
-# ── main ───────────────────────────────────────────────────────────────────────
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="드리프트 있으면 exit 1, PR 미생성",
+        "--dry-run", action="store_true",
+        help="drift 있으면 exit 1, Issue 미생성",
     )
     args = parser.parse_args()
 
@@ -359,11 +239,18 @@ def main() -> None:
     token = os.environ.get("GH_TOKEN", "")
     repo = os.environ.get("GH_REPO", "")
     if not token or not repo:
-        print("GH_TOKEN / GH_REPO 미설정 — PR 생성 건너뜀.")
+        print("GH_TOKEN / GH_REPO 미설정 — Issue 등록 건너뜀.")
         sys.exit(1)
 
-    create_auto_pr(new_apis, removed_apis, changed_fields, today, token, repo)
-    print("✅ PR 생성 완료")
+    if has_open_drift_issue(repo, token):
+        print("이미 열려있는 Drift Issue가 있습니다 — 중복 등록 건너뜀.")
+        sys.exit(1)
+
+    title = f"API Spec Drift: {today}"
+    body = build_issue_body(new_apis, removed_apis, changed_fields, today)
+    create_issue(repo, token, title, body)
+    print(f"Issue 생성 완료: {title}")
+    sys.exit(1)
 
 
 if __name__ == "__main__":
