@@ -11,7 +11,27 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: Generate packages
-        run: echo "TODO — build/dart/generate.dart 구현 후 활성화"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: pip install requests
+
+      - name: Generate TypeScript
+        run: python3 build/typescript/generate.py
+
+      - name: Generate Dart
+        run: python3 build/dart/generate.py
+
+      - name: Commit generated files
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add packages/typescript/src/generated/ packages/dart/lib/src/generated/
+          git diff --staged --quiet || git commit -m "chore: regenerate from openapi.json [skip ci]"
+          git push

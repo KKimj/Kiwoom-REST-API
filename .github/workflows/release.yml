@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'CHANGELOG.md'
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get TypeScript version
+        id: ts_ver
+        run: echo "version=$(node -p "require('./packages/typescript/package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Get Dart version
+        id: dart_ver
+        run: echo "version=$(grep '^version:' packages/dart/pubspec.yaml | awk '{print $2}')" >> $GITHUB_OUTPUT
+
+      - name: Check if mcp tag exists
+        id: mcp_tag
+        run: |
+          if git tag | grep -qx "mcp-v${{ steps.ts_ver.outputs.version }}"; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check if dart tag exists
+        id: dart_tag
+        run: |
+          if git tag | grep -qx "dart-v${{ steps.dart_ver.outputs.version }}"; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create mcp tag
+        if: steps.mcp_tag.outputs.exists == 'false'
+        run: |
+          git tag mcp-v${{ steps.ts_ver.outputs.version }}
+          git push origin mcp-v${{ steps.ts_ver.outputs.version }}
+
+      - name: Create dart tag
+        if: steps.dart_tag.outputs.exists == 'false'
+        run: |
+          git tag dart-v${{ steps.dart_ver.outputs.version }}
+          git push origin dart-v${{ steps.dart_ver.outputs.version }}
