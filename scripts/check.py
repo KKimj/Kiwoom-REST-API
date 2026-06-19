@@ -311,10 +311,17 @@ def create_auto_pr(
         text=True,
         env=env,
     )
-    print(result.stdout.strip())
     if result.returncode != 0:
         print(result.stderr.strip(), file=sys.stderr)
         sys.exit(1)
+    pr_url = result.stdout.strip()
+    print(pr_url)
+    pr_number = pr_url.rstrip("/").split("/")[-1]
+    subprocess.run(
+        ["gh", "pr", "merge", pr_number, "-R", repo, "--auto", "--squash"],
+        env=env,
+        cwd=REPO_ROOT,
+    )
 
 
 # ── main ───────────────────────────────────────────────────────────────────────
